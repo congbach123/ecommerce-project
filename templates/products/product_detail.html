@@ -1,0 +1,122 @@
+{% extends "base/base.html" %} {% block title %}Product Details{% endblock %} {%
+block content %}
+<div class="container">
+  <div class="row" id="product-container">
+    <div class="col-12 text-center" id="product-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function loadProductDetails() {
+    const productId = {{ product_id }};
+    const product = await fetchAPI(`/products/products/${productId}/`);
+    const container = document.getElementById("product-container");
+
+    if (product && container) {
+      // Record view interaction
+      if (getToken()) {
+        recordInteraction(productId, "view");
+      }
+
+      container.innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <img src="${product.image || "/static/img/placeholder.jpg"}" class="img-fluid rounded" alt="${product.name}">
+          </div>
+          <div class="col-md-6">
+            <h1>${product.name}</h1>
+            <p class="product-category">${product.category_name}</p>
+            <h2 class="product-price">$${product.price}</h2>
+            <p>${product.description}</p>
+            <p class="text-muted">In stock: ${product.stock}</p>
+
+            <div class="d-flex align-items-center mt-4">
+              <input type="number" class="form-control w-25 me-3" id="quantity-input" min="1" value="1">
+              <button class="btn btn-primary" id="add-to-cart-btn">
+                <i class="fas fa-cart-plus me-1"></i> Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-5" id="related-products-section">
+          <div class="col-12">
+            <h3 class="mb-4">You might also like</h3>
+            <div class="row" id="related-products">
+              <!-- Related products will be loaded here -->
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add to cart button event
+      document.getElementById("add-to-cart-btn").addEventListener("click", async () => {
+        if (!getToken()) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const quantity = parseInt(document.getElementById("quantity-input").value);
+
+        const response = await fetchAPI("/cart/add_item/", {
+          method: "POST",
+          body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+          })
+        });
+
+        if (response) {
+          recordInteraction(productId, "cart");
+          alert("Product added to cart!");
+          loadCartCount();
+        }
+      });
+
+      // Load related products
+      loadRelatedProducts(product.category);
+    }
+  }
+
+  async function loadRelatedProducts(categoryId) {
+    const products = await fetchAPI(`/products/products/?category=${categoryId}`);
+    const container = document.getElementById("related-products");
+
+    if (products && container) {
+      // Filter out current product and limit to 4
+      const relatedProducts = products
+        .filter(p => p.id !== {{ product_id }})
+        .slice(0, 4);
+
+      if (relatedProducts.length === 0) {
+        document.getElementById("related-products-section").style.display = "none";
+        return;
+      }
+
+      relatedProducts.forEach(product => {
+        const col = document.createElement("div");
+        col.className = "col-md-3";
+
+        col.innerHTML = `
+          <div class="card h-100">
+            <img src="${product.image || "/static/img/placeholder.jpg"}" class="card-img-top product-image" alt="${product.name}">
+            <div class="card-body">
+              <h5 class="card-title">${product.name}</h5>
+              <p class="product-price">$${product.price}</p>
+              <a href="/products/${product.id}" class="btn btn-sm btn-primary">View Details</a>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(col);
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadProductDetails);
+</script>
+{% endblock %}

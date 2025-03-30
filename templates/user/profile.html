@@ -1,0 +1,149 @@
+{% extends "base/base.html" %} {% block title %}My Profile{% endblock %} {%
+block content %}
+<div class="container">
+  <h1 class="mb-4">My Profile</h1>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4>Profile Information</h4>
+        </div>
+        <div class="card-body">
+          <div id="profile-container">
+            <div class="text-center" id="profile-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h4>Quick Links</h4>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <a href="/orders" class="text-decoration-none">
+                <i class="fas fa-box me-2"></i> My Orders
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a href="/cart" class="text-decoration-none">
+                <i class="fas fa-shopping-cart me-2"></i> My Cart
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a
+                href="#"
+                id="logout-link"
+                class="text-decoration-none text-danger"
+              >
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function loadProfile() {
+    if (!getToken()) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const profile = await fetchAPI("/users/profile/");
+    const container = document.getElementById("profile-container");
+
+    if (profile && container) {
+      container.innerHTML = `
+        <form id="profile-form">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="first_name" class="form-label">First Name</label>
+              <input type="text" class="form-control" id="first_name" value="${
+                profile.first_name || ""
+              }" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="last_name" class="form-label">Last Name</label>
+              <input type="text" class="form-control" id="last_name" value="${
+                profile.last_name || ""
+              }" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" value="${
+              profile.username || ""
+            }" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" value="${
+              profile.email || ""
+            }" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="phone" value="${
+              profile.phone_number || ""
+            }">
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Address</label>
+            <textarea class="form-control" id="address" rows="3">${
+              profile.address || ""
+            }</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      `;
+
+      // Profile form submission
+      document
+        .getElementById("profile-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const userData = {
+            first_name: document.getElementById("first_name").value,
+            last_name: document.getElementById("last_name").value,
+            email: document.getElementById("email").value,
+            phone_number: document.getElementById("phone").value,
+            address: document.getElementById("address").value,
+          };
+
+          const response = await fetchAPI("/users/profile/", {
+            method: "PUT",
+            body: JSON.stringify(userData),
+          });
+
+          if (response) {
+            alert("Profile updated successfully!");
+          }
+        });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadProfile();
+
+    // Logout handler
+    document.getElementById("logout-link").addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.removeItem(TOKEN_KEY);
+      window.location.href = "/";
+    });
+  });
+</script>
+{% endblock %}

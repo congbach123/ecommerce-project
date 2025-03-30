@@ -1,0 +1,117 @@
+{% extends "base/base.html" %} {% block title %}My Orders{% endblock %} {% block
+content %}
+<div class="container">
+  <h1 class="mb-4">My Orders</h1>
+
+  <div id="orders-container">
+    <div class="text-center" id="orders-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function loadOrders() {
+    if (!getToken()) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const orders = await fetchAPI("/orders/");
+    const container = document.getElementById("orders-container");
+
+    if (orders && container) {
+      if (orders.length === 0) {
+        container.innerHTML = `
+          <div class="alert alert-info">
+            You haven't placed any orders yet. <a href="/products">Start shopping</a>.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = "";
+
+      orders.forEach((order) => {
+        const orderDiv = document.createElement("div");
+        orderDiv.className = "card mb-4";
+
+        orderDiv.innerHTML = `
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-0">Order #${order.id}</h5>
+              <small class="text-muted">Placed on ${new Date(
+                order.created_at
+              ).toLocaleDateString()}</small>
+            </div>
+            <span class="badge bg-${getStatusBadgeColor(order.status)}">${
+          order.status
+        }</span>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <strong>Shipping Address:</strong>
+              <p class="mb-0">${order.shipping_address}</p>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${order.items
+                    .map(
+                      (item) => `
+                    <tr>
+                      <td>${item.product_name}</td>
+                      <td>$${item.price}</td>
+                      <td>${item.quantity}</td>
+                      <td>$${item.total}</td>
+                    </tr>
+                  `
+                    )
+                    .join("")}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th colspan="3" class="text-end">Order Total:</th>
+                    <th>$${order.total_amount}</th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(orderDiv);
+      });
+    }
+  }
+
+  function getStatusBadgeColor(status) {
+    switch (status) {
+      case "pending":
+        return "warning";
+      case "processing":
+        return "info";
+      case "shipped":
+        return "primary";
+      case "delivered":
+        return "success";
+      case "cancelled":
+        return "danger";
+      default:
+        return "secondary";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadOrders);
+</script>
+{% endblock %}

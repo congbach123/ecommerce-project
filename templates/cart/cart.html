@@ -1,0 +1,167 @@
+{% extends "base/base.html" %} {% block title %}Shopping Cart{% endblock %} {%
+block content %}
+<div class="container">
+  <h1 class="mb-4">Your Shopping Cart</h1>
+
+  <div id="cart-container">
+    <div class="text-center" id="cart-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function loadCart() {
+    if (!getToken()) {
+      document.getElementById("cart-container").innerHTML = `
+        <div class="alert alert-info">
+          Please <a href="/login">login</a> to view your cart.
+        </div>
+      `;
+      return;
+    }
+
+    const cart = await fetchAPI("/cart/");
+    const container = document.getElementById("cart-container");
+
+    if (cart && container) {
+      const items = cart.items || [];
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="alert alert-info">
+            Your cart is empty. <a href="/products">Continue shopping</a>.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cart-items">
+                ${items
+                  .map(
+                    (item) => `
+                  <tr data-item-id="${item.id}">
+                    <td>${item.product_name}</td>
+                    <td>$${item.price}</td>
+                    <td>
+                      <div class="input-group" style="width: 120px;">
+                        <button class="btn btn-sm btn-outline-secondary decrease-btn">-</button>
+                        <input type="text" class="form-control text-center quantity-input" value="${item.quantity}" readonly>
+                        <button class="btn btn-sm btn-outline-secondary increase-btn">+</button>
+                      </div>
+                    </td>
+                    <td>$${item.total}</td>
+                    <td>
+                      <button class="btn btn-sm btn-danger remove-btn">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3" class="text-end">Total:</th>
+                  <th>$${cart.total}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+          <a href="/products" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+          </a>
+          <a href="/checkout" class="btn btn-primary">
+            <i class="fas fa-credit-card me-1"></i> Proceed to Checkout
+          </a>
+        </div>
+      `;
+
+      // Add event listeners
+      document.querySelectorAll(".increase-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const row = btn.closest("tr");
+          const itemId = row.dataset.itemId;
+          const input = row.querySelector(".quantity-input");
+          const newQuantity = parseInt(input.value) + 1;
+
+          await updateCartItem(itemId, newQuantity);
+        });
+      });
+
+      document.querySelectorAll(".decrease-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const row = btn.closest("tr");
+          const itemId = row.dataset.itemId;
+          const input = row.querySelector(".quantity-input");
+          const currentQuantity = parseInt(input.value);
+
+          if (currentQuantity > 1) {
+            const newQuantity = currentQuantity - 1;
+            await updateCartItem(itemId, newQuantity);
+          }
+        });
+      });
+
+      document.querySelectorAll(".remove-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const row = btn.closest("tr");
+          const itemId = row.dataset.itemId;
+
+          await removeCartItem(itemId);
+        });
+      });
+    }
+  }
+
+  async function updateCartItem(itemId, quantity) {
+    const response = await fetchAPI("/cart/update_item/", {
+      method: "POST",
+      body: JSON.stringify({
+        item_id: itemId,
+        quantity: quantity,
+      }),
+    });
+
+    if (response) {
+      loadCart();
+    }
+  }
+
+  async function removeCartItem(itemId) {
+    const response = await fetchAPI("/cart/remove_item/", {
+      method: "POST",
+      body: JSON.stringify({
+        item_id: itemId,
+      }),
+    });
+
+    if (response !== null) {
+      loadCart();
+      loadCartCount();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadCart);
+</script>
+{% endblock %}

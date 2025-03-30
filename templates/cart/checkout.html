@@ -1,0 +1,178 @@
+{% extends "base/base.html" %} {% block title %}Checkout{% endblock %} {% block
+content %}
+<div class="container">
+  <h1 class="mb-4">Checkout</h1>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h4>Shipping Information</h4>
+        </div>
+        <div class="card-body">
+          <form id="checkout-form">
+            <div class="mb-3">
+              <label for="shipping-address" class="form-label"
+                >Shipping Address</label
+              >
+              <textarea
+                class="form-control"
+                id="shipping-address"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <h5 class="mt-4 mb-3">Payment Information</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="card-name" class="form-label">Name on Card</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="card-name"
+                  required
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="card-number" class="form-label">Card Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="card-number"
+                  required
+                />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="card-expiry" class="form-label">Expiration</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="card-expiry"
+                  placeholder="MM/YY"
+                  required
+                />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="card-cvv" class="form-label">CVV</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="card-cvv"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="alert alert-danger d-none" id="checkout-error"></div>
+            <button type="submit" class="btn btn-primary mt-3">
+              <i class="fas fa-lock me-1"></i> Place Order
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h4>Order Summary</h4>
+        </div>
+        <div class="card-body">
+          <div id="order-summary">
+            <div class="text-center" id="summary-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function loadOrderSummary() {
+    if (!getToken()) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const cart = await fetchAPI("/cart/");
+    const summaryContainer = document.getElementById("order-summary");
+
+    if (cart && summaryContainer) {
+      const items = cart.items || [];
+
+      if (items.length === 0) {
+        summaryContainer.innerHTML = `
+          <div class="alert alert-info">
+            Your cart is empty. <a href="/products">Continue shopping</a>.
+          </div>
+        `;
+        return;
+      }
+
+      summaryContainer.innerHTML = `
+        <ul class="list-group list-group-flush">
+          ${items
+            .map(
+              (item) => `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span>${item.product_name}</span>
+                <small class="d-block text-muted">Qty: ${item.quantity}</small>
+              </div>
+              <span>$${item.total}</span>
+            </li>
+          `
+            )
+            .join("")}
+          <li class="list-group-item d-flex justify-content-between align-items-center fw-bold">
+            <span>Total</span>
+            <span>$${cart.total}</span>
+          </li>
+        </ul>
+      `;
+
+      // Pre-fill shipping address if available
+      const userProfile = await fetchAPI("/users/profile/");
+      if (userProfile && userProfile.address) {
+        document.getElementById("shipping-address").value = userProfile.address;
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadOrderSummary();
+
+    // Checkout form submission
+    document
+      .getElementById("checkout-form")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const shippingAddress =
+          document.getElementById("shipping-address").value;
+
+        const response = await fetchAPI("/orders/create_from_cart/", {
+          method: "POST",
+          body: JSON.stringify({
+            shipping_address: shippingAddress,
+          }),
+        });
+
+        if (response) {
+          window.location.href = "/orders";
+        } else {
+          const errorElem = document.getElementById("checkout-error");
+          errorElem.textContent = "Failed to place order. Please try again.";
+          errorElem.classList.remove("d-none");
+        }
+      });
+  });
+</script>
+{% endblock %}
