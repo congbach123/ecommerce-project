@@ -1,0 +1,61 @@
+/* Main CSS Styles */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-bottom: 20px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+  height: 200px;
+  object-fit: contain;
+  padding: 10px;
+}
+
+.btn-primary {
+  background-color: #4a6fdc;
+  border-color: #4a6fdc;
+}
+
+.btn-primary:hover {
+  background-color: #3a5bb9;
+  border-color: #3a5bb9;
+}
+
+.product-price {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #e91e63;
+}
+
+.product-category {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.recommendations {
+  background-color: #f0f4ff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.recommendation-title {
+  border-bottom: 2px solid #4a6fdc;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  color: #333;
+}

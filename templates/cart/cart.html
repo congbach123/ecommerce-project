@@ -1,5 +1,8 @@
-{% extends "base/base.html" %} {% block title %}Shopping Cart{% endblock %} {%
-block content %}
+{% extends "base/base.html" %} 
+
+{% block title %}Shopping Cart{% endblock %} 
+
+{% block content %}
 <div class="container">
   <h1 class="mb-4">Your Shopping Cart</h1>
 
@@ -11,7 +14,9 @@ block content %}
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %} 
+
+{% block extra_js %}
 <script>
   async function loadCart() {
     if (!getToken()) {

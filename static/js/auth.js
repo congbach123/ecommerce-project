@@ -16,16 +16,33 @@ async function login(username, password) {
   return false;
 }
 
+// async function register(userData) {
+//   const response = await fetch(`${API_URL}/users/register/`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(userData),
+//   });
+
+//   return response.ok;
+// }
 async function register(userData) {
+  // Get the CSRF token from the cookie
+  const csrftoken = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1];
+
   const response = await fetch(`${API_URL}/users/register/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken
+    },
     body: JSON.stringify(userData),
   });
 
   return response.ok;
 }
-
 // Login Form Handler
 if (document.getElementById("login-form")) {
   document

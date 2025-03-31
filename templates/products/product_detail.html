@@ -1,5 +1,9 @@
-{% extends "base/base.html" %} {% block title %}Product Details{% endblock %} {%
-block content %}
+{% extends "base/base.html" %} 
+
+{% block title %}Product Details{% endblock %} 
+
+{% block content %}
+
 <div class="container">
   <div class="row" id="product-container">
     <div class="col-12 text-center" id="product-loading">
@@ -9,7 +13,9 @@ block content %}
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %} 
+
+{% block extra_js %}
 <script>
   async function loadProductDetails() {
     const productId = {{ product_id }};

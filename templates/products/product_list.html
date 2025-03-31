@@ -1,5 +1,8 @@
-{% extends "base/base.html" %} {% block title %}Products{% endblock %} {% block
-content %}
+{% extends "base/base.html" %} 
+
+{% block title %}Products{% endblock %} 
+
+{% block content %}
 <div class="container">
   <h1 class="mb-4">All Products</h1>
 
@@ -36,7 +39,9 @@ content %}
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %} 
+
+{% block extra_js %}
 <script>
   async function loadProducts(category = null) {
     let endpoint = "/products/products/";

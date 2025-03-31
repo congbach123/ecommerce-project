@@ -1,5 +1,8 @@
-{% extends "base/base.html" %} {% block title %}Home - E-commerce Store{%
-endblock %} {% block content %}
+{% extends "base/base.html" %}
+
+{% block title %}Home - E-commerce Store{% endblock %}
+
+{% block content %}
 <div class="jumbotron bg-light p-5 rounded mb-4">
   <h1 class="display-4">Welcome to our E-commerce Store</h1>
   <p class="lead">Discover amazing products at competitive prices.</p>
@@ -29,7 +32,9 @@ endblock %} {% block content %}
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+{% endblock %}
+
+{% block extra_js %}
 <script>
   async function loadFeaturedProducts() {
     const products = await fetchAPI("/products/products/?featured=true");
